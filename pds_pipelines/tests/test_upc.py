@@ -320,7 +320,7 @@ def test_process_isis():
 
     processes = {'getsn': {'from_': '/Path/to/some/cube.cub'}}
 
-    failing_command = process(processes, '/', '/', logger)
+    failing_command = process(processes, '/', logger)
     assert failing_command == ''
 
 def test_bad_process_isis():
@@ -328,5 +328,5 @@ def test_bad_process_isis():
 
     processes = {'spiceinit': {'from_': '/Path/to/some/cube.cub'}}
 
-    failing_command = process(processes, '/', '/', logger)
+    failing_command = process(processes, '/', logger)
     assert failing_command == 'spiceinit'
