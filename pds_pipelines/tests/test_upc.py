@@ -30,7 +30,7 @@ from pds_pipelines.db import db_connect
 from pds_pipelines import upc_process
 from pds_pipelines.upc_process import *
 
-from pds_pipelines.upc_process import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id, getISISid, process_isis, generate_isis_processes
+from pds_pipelines.upc_process import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id, getISISid, process, generate_processes
 from pds_pipelines.models import upc_models as models
 
 @pytest.fixture
@@ -254,7 +254,7 @@ def test_search_terms_no_datafile(mocked_product_id, mocked_keyword, mocked_init
     upc_id = cam_info_dict['upcid']
 
     with pytest.raises(sqlalchemy.exc.IntegrityError):
-        create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', session_maker)   
+        create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', session_maker)
 
 @patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
 def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
@@ -294,40 +294,36 @@ def test_json_keywords_no_datafile(mocked_init, session, session_maker, pds_labe
     with pytest.raises(sqlalchemy.exc.IntegrityError),\
     patch('pds_pipelines.upc_keywords.UPCkeywords.label', new_callable=PropertyMock) as mocked_label:
         mocked_label.return_value = pds_label
-        create_json_keywords_record(pds_label, upc_id, '/Path/to/my/cube.cub', 'No Failures', session_maker)  
+        create_json_keywords_record(pds_label, upc_id, '/Path/to/my/cube.cub', 'No Failures', session_maker)
 
-def test_generate_isis_processes():
+def test_generate_processes():
     logger = logging.getLogger('UPC_Process')
 
     inputfile = "./pds_pipelines/tests/data/5600r.lbl"
     fid = "1"
     archive = "galileo_ssi_edr"
 
-    processes, inputfile, caminfoOUT, pwd = generate_isis_processes(inputfile, archive, logger)
+    processes, inputfile, caminfoOUT, pwd = generate_processes(inputfile, archive, logger)
 
-    # TODO Factor out the Recipe object from this test
-    recipeOBJ = Recipe()
-    recipeOBJ.addMissionJson(archive, 'upc')
-    original_recipe = recipeOBJ.getRecipe()
+    recipe_file = recipe_base + "/" + archive + '.json'
+    with open(recipe_file) as fp:
+        original_recipe = json.load(fp)['upc']['recipe']
 
-    for i, process in enumerate(processes):
-        for k, v in process.getProcess().items():
-            assert original_recipe[i][k].keys() == v.keys()
+    for k, v in processes.items():
+        assert original_recipe[k].keys() == v.keys()
 
 def test_process_isis():
     logger = logging.getLogger('UPC_Process')
 
-    process = Mock(spec=Process)
-    process.getProcess.return_value = {'getsn': {'from_': '/Path/to/some/cube.cub'}}
+    processes = {'getsn': {'from_': '/Path/to/some/cube.cub'}}
 
-    failing_command = process_isis([process], '/', '/', logger)
+    failing_command = process(processes, '/', '/', logger)
     assert failing_command == ''
 
 def test_bad_process_isis():
     logger = logging.getLogger('UPC_Process')
 
-    process = Mock(spec=Process)
-    process.getProcess.return_value = {'spiceinit': {'from_': '/Path/to/some/cube.cub'}}
+    processes = {'spiceinit': {'from_': '/Path/to/some/cube.cub'}}
 
-    failing_command = process_isis([process], '/', '/', logger)
+    failing_command = process(processes, '/', '/', logger)
     assert failing_command == 'spiceinit'
