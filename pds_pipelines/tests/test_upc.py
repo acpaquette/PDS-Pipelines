@@ -258,13 +258,14 @@ def test_search_terms_no_datafile(mocked_product_id, mocked_keyword, mocked_init
 
 @patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
 def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
+    logger = logging.getLogger('UPC_Process')
     upc_id = cam_info_dict['upcid']
 
     models.DataFiles.create(session, upcid = upc_id)
 
     with patch('pds_pipelines.upc_keywords.UPCkeywords.label', new_callable=PropertyMock) as mocked_label:
         mocked_label.return_value = pds_label
-        create_json_keywords_record(pds_label, upc_id, '/Path/to/my/cube.cub', 'No Failures', session_maker)
+        create_json_keywords_record(pds_label, upc_id, '/Path/to/my/cube.cub', 'No Failures', session_maker, logger)
 
     resp = session.query(JsonKeywords).filter(JsonKeywords.upcid == upc_id).first()
     resp_json = resp.jsonkeywords
@@ -274,12 +275,13 @@ def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
     assert resp_json['SPACECRAFT_NAME'] == pds_label['SPACECRAFT_NAME']
 
 def test_json_keywords_exception(session, session_maker):
+    logger = logging.getLogger('UPC_Process')
     upc_id = cam_info_dict['upcid']
     models.DataFiles.create(session, upcid = upc_id)
 
     input_cube = '/Path/to/my/cube.cub'
     error_message = 'Got to exception.'
-    create_json_keywords_record("", upc_id, input_cube, error_message, session_maker)
+    create_json_keywords_record("", upc_id, input_cube, error_message, session_maker, logger)
     resp = session.query(JsonKeywords).filter(JsonKeywords.upcid == upc_id).first()
     resp_json = resp.jsonkeywords
     assert resp_json['errortype'] == error_message
@@ -289,12 +291,13 @@ def test_json_keywords_exception(session, session_maker):
 
 @patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
 def test_json_keywords_no_datafile(mocked_init, session, session_maker, pds_label):
+    logger = logging.getLogger('UPC_Process')
     upc_id = cam_info_dict['upcid']
 
     with pytest.raises(sqlalchemy.exc.IntegrityError),\
     patch('pds_pipelines.upc_keywords.UPCkeywords.label', new_callable=PropertyMock) as mocked_label:
         mocked_label.return_value = pds_label
-        create_json_keywords_record(pds_label, upc_id, '/Path/to/my/cube.cub', 'No Failures', session_maker)
+        create_json_keywords_record(pds_label, upc_id, '/Path/to/my/cube.cub', 'No Failures', session_maker, logger)
 
 def test_generate_processes():
     logger = logging.getLogger('UPC_Process')
