@@ -7,7 +7,7 @@ def db_connect(cred):
     """
     Given some crediential string that is present as a key in the config
     credentials dictionary, generate the engine and associated session_maker
-    objects for a databaseself.
+    objects for a database.
 
     Parameters
     ----------
