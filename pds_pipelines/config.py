@@ -1,15 +1,20 @@
 import os
 # Database credentials
-credentials = {'upc_test': {'user': 'postgres',
-                        'pass': '',
+credentials = {'upc_test': {'user': 'mgr',
+                        'pass': '1234',
                         'host': 'localhost',
-                        'port': '5432',
+                        'port': '9010',
                         'db': 'upc_test'},
-               'di_test': {'user': 'postgres',
-                            'pass': '',
+               'di_test': {'user': 'mgr',
+                            'pass': '1234',
                             'host': 'localhost',
-                            'port': '5432',
-                            'db': 'di_test'}
+                            'port': '9010',
+                            'db': 'di_test'},
+               'clusterjob_test': {'user': 'mgr',
+                                  'pass': '1234',
+                                  'host': 'localhost',
+                                  'port': '9010',
+                                  'db': 'clusterjobs_prd'}
                }
 
 # Redis path(?) info
@@ -41,6 +46,7 @@ default_namespace = 'adampaquette_queue'
 
 pds_db = 'di_test'
 upc_db = 'upc_test'
+cluster_db = 'clusterjob_test'
 
 scratch = '/scratch/pds_services/'
 
