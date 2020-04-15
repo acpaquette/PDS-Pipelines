@@ -1,20 +1,20 @@
 import os
 # Database credentials
-credentials = {'upc_test': {'user': 'mgr',
-                        'pass': '1234',
+credentials = {'upc_test': {'user': 'postgres',
+                        'pass': '',
                         'host': 'localhost',
-                        'port': '9010',
+                        'port': '5432',
                         'db': 'upc_test'},
-               'di_test': {'user': 'mgr',
-                            'pass': '1234',
+               'di_test': {'user': 'postgres',
+                            'pass': '',
                             'host': 'localhost',
-                            'port': '9010',
+                            'port': '5432',
                             'db': 'di_test'},
-               'clusterjob_test': {'user': 'mgr',
-                                  'pass': '1234',
+               'clusterjob_test': {'user': 'postgres',
+                                  'pass': '',
                                   'host': 'localhost',
-                                  'port': '9010',
-                                  'db': 'clusterjobs_prd'}
+                                  'port': '5432',
+                                  'db': 'clusterjobs_test'}
                }
 
 # Redis path(?) info
