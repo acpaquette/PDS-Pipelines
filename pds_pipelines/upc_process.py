@@ -5,13 +5,15 @@ import sys
 import datetime
 import logging
 import hashlib
-import json
 from ast import literal_eval
 import pytz
-import pvl
 import argparse
 import jinja2
+from glob import glob
 
+import pvl
+import json
+from sqlalchemy import and_
 from pysis import isis
 from pysis.exceptions import ProcessError
 
@@ -25,7 +27,6 @@ from pds_pipelines.models import pds_models
 from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords, BaseMixin
 from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base, archive_base, recipe_base
 
-from sqlalchemy import and_
 
 def getPDSid(infile):
     """ Use ISIS to get the PDS Product ID of a cube.
@@ -429,7 +430,7 @@ def generate_processes(inputfile, archive, logger):
     logger.info('Starting Process: %s', inputfile)
 
     # Working directory for processing should be same as inputfile
-    pwd = os.path.dirname(inputfile)
+    workarea_pwd = os.path.dirname(inputfile)
 
     logger.debug("Beginning processing on %s\n", inputfile)
     no_extension_inputfile = os.path.splitext(inputfile)[0]
@@ -445,16 +446,16 @@ def generate_processes(inputfile, archive, logger):
                                  cam_info_file=cam_info_file)
     processes = json.loads(recipe_str)
 
-    return processes, no_extension_inputfile, cam_info_file, pwd
+    return processes, no_extension_inputfile, cam_info_file, workarea_pwd
 
-def process(processes, workarea, pwd, logger):
+def process(processes, workarea_pwd, logger):
     # iterate through functions from the processes dictionary
     failing_command = ''
     for command, keywargs in processes.items():
         # load a function into func
         func = getattr(isis, command)
         try:
-            os.chdir(pwd)
+            os.chdir(workarea_pwd)
             # execute function
             logger.debug("Running %s", command)
             func(**keywargs)
@@ -537,8 +538,8 @@ def main(user_args):
         # Update the logger context to include inputfile
         context['inputfile'] = inputfile
 
-        processes, infile, caminfoOUT, pwd = generate_processes(inputfile, archive, logger)
-        failing_command = process(processes, workarea, pwd, logger)
+        processes, infile, caminfoOUT, workarea_pwd = generate_processes(inputfile, archive, logger)
+        failing_command = process(processes, workarea_pwd, logger)
 
         pds_label = pvl.load(inputfile)
 
@@ -560,9 +561,13 @@ def main(user_args):
         AddProcessDB(pds_session, fid, True)
         pds_session.close()
 
-        # if not persist:
-        #     os.remove(infile)
-        #     os.remove(caminfoOUT)
+        if not persist:
+            # Remove all files file from the workarea except for the copied
+            # source file
+            workarea_files = glob(workarea_pwd + '/*')
+            workarea_files.remove(inputfile)
+            for file in workarea_files:
+                os.remove(file)
 
         # Disconnect from the engines
         pds_engine.dispose()
