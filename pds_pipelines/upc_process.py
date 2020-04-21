@@ -255,6 +255,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
         d_label = None
 
     # datafile_attributes = dict.fromkeys(DataFiles.__table__.columns.keys(), None)
+    datafile_attributes = {}
     datafile_attributes['upcid'] = None
     datafile_attributes['source'] = img_file
     datafile_attributes['detached_label'] = d_label
