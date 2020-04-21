@@ -254,8 +254,8 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
         img_file = edr_source
         d_label = None
 
-    datafile_attributes = dict.fromkeys(DataFiles.__table__.columns.keys(), None)
-
+    # datafile_attributes = dict.fromkeys(DataFiles.__table__.columns.keys(), None)
+    datafile_attributes['upcid'] = None
     datafile_attributes['source'] = img_file
     datafile_attributes['detached_label'] = d_label
 
@@ -278,17 +278,23 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
     datafile_attributes['targetid'] = get_target_id(label, session_maker)
 
     session = session_maker()
-    datafile_qobj = session.query(DataFiles).filter(
-        DataFiles.source == img_file).first()
+    new_datafile = DataFiles(**datafile_attributes)
+    # datafile_qobj = session.query(DataFiles).filter(
+        # DataFiles.source == img_file).first()
 
-    if datafile_qobj is None:
-        DataFiles.create(session, **datafile_attributes)
-    else:
-        datafile_attributes.pop('upcid')
-        session.query(DataFiles).\
-            filter(DataFiles.source == img_file).\
-            update(datafile_attributes)
-        session.commit()
+    # if datafile_qobj is None:
+    #     DataFiles.create(session, **datafile_attributes)
+    # else:
+    #     # datafile_attributes.pop('upcid')
+    #     session.query(DataFiles).\
+    #         filter(DataFiles.source == img_file).\
+    #         update(datafile_attributes)
+    #     session.commit()
+    # session.close()
+
+    # datafile_attributes.pop('upcid')
+    session.merge(new_datafile)
+    session.commit()
     session.close()
 
     session = session_maker()
