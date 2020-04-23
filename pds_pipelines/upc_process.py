@@ -28,12 +28,13 @@ from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, D
 from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base, archive_base, recipe_base
 
 
-def getPDSid(infile):
-    """ Use ISIS to get the PDS Product ID of a cube.
+def getPDSid(label):
+    """
+    Use ISIS to get the PDS Product ID of a cube.
 
-        Using ISIS `getkey` is preferred over extracting the Product ID
-        using the PVL library because of an edge case where PVL will
-        erroneously convert Product IDs from string to floating point.
+    Using ISIS `getkey` is preferred over extracting the Product ID
+    using the PVL library because of an edge case where PVL will
+    erroneously convert Product IDs from string to floating point.
 
     Parameters
     ----------
@@ -46,8 +47,13 @@ def getPDSid(infile):
     prod_id : str
         The PDS Product ID.
     """
-    upc_keywords = UPCkeywords(infile)
-    prod_id = upc_keywords.getKeyword('productid')
+    # upc_keywords = UPCkeywords(infile)
+    for key in ['productid', 'product_id', 'PRODUCTID', 'PRODUCT_ID', ]:
+        try:
+            prod_id = label[key]
+        except:
+            continue
+        break
     # in later versions of ISIS, key values are returned as bytes
     if isinstance(prod_id, bytes):
         prod_id = prod_id.decode()
@@ -261,7 +267,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
 
     # Attemp to get the ISIS serial from the cube
     try:
-        isis_id = getISISid(input_cube)
+        isis_id = getISISid(input_cube + '.cub')
     except:
         isis_id = None
 
@@ -269,7 +275,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
 
     # Attemp to get the product id from the cube
     try:
-        product_id = getPDSid(input_cube)
+        product_id = getPDSid(label)
     except:
         product_id = None
 
