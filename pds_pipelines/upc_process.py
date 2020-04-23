@@ -28,7 +28,7 @@ from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, D
 from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base, archive_base, recipe_base
 
 
-def getPDSid(label):
+def getPDSid(infile):
     """
     Use ISIS to get the PDS Product ID of a cube.
 
@@ -47,13 +47,11 @@ def getPDSid(label):
     prod_id : str
         The PDS Product ID.
     """
-    # upc_keywords = UPCkeywords(infile)
-    for key in ['productid', 'product_id', 'PRODUCTID', 'PRODUCT_ID', ]:
-        try:
-            prod_id = label[key]
-        except:
-            continue
-        break
+    upc_keywords = UPCkeywords(infile)
+    for key in ['productid', 'product_id', 'PRODUCTID', 'PRODUCT_ID']:
+        prod_id = upc_keywords.getKeyword(key)
+        if prod_id:
+            break
     # in later versions of ISIS, key values are returned as bytes
     if isinstance(prod_id, bytes):
         prod_id = prod_id.decode()
@@ -267,7 +265,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
 
     # Attemp to get the ISIS serial from the cube
     try:
-        isis_id = getISISid(input_cube + '.cub')
+        isis_id = getISISid(input_cube)
     except:
         isis_id = None
 
@@ -550,7 +548,18 @@ def main(user_args):
         # Update the logger context to include inputfile
         context['inputfile'] = inputfile
 
-        processes, infile, caminfoOUT, workarea_pwd = generate_processes(inputfile, archive, logger)
+        recipe_file = recipe_base + "/" + archive + '.json'
+        with open(recipe_file) as fp:
+            upc_json = json.load(fp)['upc']
+            recipe_string = json.dumps(upc_json['recipe'])
+            # Attempt to get the optional search_term_mapping for the upc
+            # process
+            try:
+                search_term_mapping = upc_json['search_term_mapping']
+            except KeyError:
+                search_term_mapping = {}
+
+        processes, infile, caminfoOUT, workarea_pwd = generate_processes(inputfile, recipe_string, logger)
         failing_command = process(processes, workarea_pwd, logger)
 
         pds_label = pvl.load(inputfile)

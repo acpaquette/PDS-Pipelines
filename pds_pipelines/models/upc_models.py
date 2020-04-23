@@ -60,8 +60,8 @@ class DataFiles(BaseMixin, Base):
     detached_label = Column(String(1024))
     instrumentid = Column(Integer, ForeignKey("instruments.instrumentid"))
     targetid = Column(Integer, ForeignKey("targets.targetid"))
-    search_terms = relationship('SearchTerms', backref="DataFiles", uselist=True, cascade="all, delete-orphan")
-    json_keyword = relationship('JsonKeywords', backref="DataFiles", uselist=True, cascade="all, delete-orphan")
+    search_terms = relationship('SearchTerms', backref="DataFiles", uselist=True, cascade="save-update, merge, delete, delete-orphan")
+    json_keyword = relationship('JsonKeywords', backref="DataFiles", uselist=True, cascade="save-update, merge, delete, delete-orphan")
     level = Column(CHAR(1))
 
 
