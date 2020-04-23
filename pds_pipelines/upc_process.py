@@ -302,7 +302,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
 
     return upc_id
 
-def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, session_maker):
+def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, search_term_mapping={}, session_maker=None):
     """
     Creates a new SearchTerms record through values from a given caminfo file
     and adds the new record to the database
@@ -326,6 +326,9 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, session_
     search_term_attributes = dict.fromkeys(SearchTerms.__table__.columns.keys(), None)
     search_term_attributes['err_flag'] = True
 
+    if not search_term_mapping:
+        search_term_mapping = dict(zip(search_term_attributes.keys(), search_term_attributes.keys()))
+
     try:
         keywordsOBJ = UPCkeywords(cam_info_pvl)
     except:
@@ -335,7 +338,7 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, session_
         # For each key in the dictionary, get the related keyword from the keywords object
         for key in search_term_attributes.keys():
             try:
-                search_term_attributes[key] = keywordsOBJ.getKeyword(key)
+                search_term_attributes[key] = keywordsOBJ.getKeyword(search_term_mapping[key])
             except KeyError:
                 search_term_attributes[key] = None
 
@@ -435,7 +438,7 @@ def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_comman
         session.commit()
     session.close()
 
-def generate_processes(inputfile, archive, logger):
+def generate_processes(inputfile, recipe_string, logger):
     logger.info('Starting Process: %s', inputfile)
 
     # Working directory for processing should be same as inputfile
@@ -445,11 +448,7 @@ def generate_processes(inputfile, archive, logger):
     no_extension_inputfile = os.path.splitext(inputfile)[0]
     cam_info_file = os.path.splitext(inputfile)[0] + '.caminfo.pvl'
 
-    recipe_file = recipe_base + "/" + archive + '.json'
-    with open(recipe_file) as fp:
-        json_str = json.dumps(json.load(fp)['upc']['recipe'])
-
-    template = jinja2.Template(json_str)
+    template = jinja2.Template(recipe_string)
     recipe_str = template.render(inputfile=inputfile,
                                  no_extension_inputfile=no_extension_inputfile,
                                  cam_info_file=cam_info_file)
@@ -568,7 +567,7 @@ def main(user_args):
         upc_id = create_datafiles_record(pds_label, edr_source, infile, upc_session_maker)
 
         ######## Generate SearchTerms Record ########
-        create_search_terms_record(pds_label, caminfoOUT, upc_id, infile, upc_session_maker)
+        create_search_terms_record(pds_label, caminfoOUT, upc_id, infile, search_term_mapping, upc_session_maker)
 
         ######## Generate JsonKeywords Record ########
         create_json_keywords_record(caminfoOUT, upc_id, inputfile, failing_command, upc_session_maker, logger)
