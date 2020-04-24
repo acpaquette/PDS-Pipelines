@@ -15,6 +15,8 @@ import pvl
 import json
 from sqlalchemy import and_
 from pds_pipelines import available_modules
+
+from pysis import isis
 from pysis.exceptions import ProcessError
 
 from pds_pipelines.redis_lock import RedisLock
@@ -39,7 +41,7 @@ def getPDSid(infile):
     Parameters
     ----------
     infile : str
-                A string file path from which the Product ID will be extracted.
+             A string file path from which the Product ID will be extracted.
 
 
     Returns
@@ -47,9 +49,14 @@ def getPDSid(infile):
     prod_id : str
         The PDS Product ID.
     """
-    try:
-        prod_id = available_modules['isis'].getkey(from_=infile, keyword="Product_Id", grp="Archive")
-    except (ProcessError, KeyError) as e:
+    for key in ['product_id'. 'productid']:
+        try:
+            prod_id = isis.getkey(from_=infile, keyword=key, grp="Archive")
+            break
+        except ProcessError as e:
+            prod_id = None
+
+    if not prod_id:
         return None
 
     # in later versions of ISIS, key values are returned as bytes
@@ -73,7 +80,7 @@ def getISISid(infile):
         The serial number of the input file.
     """
     try:
-        serial_num = available_modules['isis'].getsn(from_=infile)
+        serial_num = isis.getsn(from_=infile)
     except (ProcessError, KeyError) as e:
         # If either isis was not imported or a serial number could not be
         # generated from the infile set the serial number to an empty string
