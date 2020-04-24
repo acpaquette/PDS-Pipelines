@@ -49,7 +49,7 @@ def getPDSid(infile):
     prod_id : str
         The PDS Product ID.
     """
-    for key in ['product_id'. 'productid']:
+    for key in ['product_id', 'productid']:
         try:
             prod_id = isis.getkey(from_=infile, keyword=key, grp="Archive")
             break
