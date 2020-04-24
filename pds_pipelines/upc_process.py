@@ -51,7 +51,7 @@ def getPDSid(infile):
     """
     for key in ['product_id', 'productid']:
         try:
-            prod_id = isis.getkey(from_=infile, keyword=key, grp="Archive")
+            prod_id = isis.getkey(from_=infile, keyword=key)
             break
         except ProcessError as e:
             prod_id = None
