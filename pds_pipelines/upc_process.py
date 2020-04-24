@@ -48,7 +48,7 @@ def getPDSid(infile):
         The PDS Product ID.
     """
     upc_keywords = UPCkeywords(infile)
-    for key in ['productid', 'product_id', 'PRODUCTID', 'PRODUCT_ID']:
+    for key in ['productid', 'product_id', 'imageid', 'image_id']:
         prod_id = upc_keywords.getKeyword(key)
         if prod_id:
             break
@@ -271,7 +271,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
 
     datafile_attributes['isisid'] = isis_id
 
-    # Attemp to get the product id from the cube
+    # Attemp to get the product id from the original label
     try:
         product_id = getPDSid(label)
     except:
@@ -348,7 +348,7 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, search_t
     search_term_attributes['upcid'] = upc_id
 
     try:
-        product_id = getPDSid(input_cube)
+        product_id = getPDSid(label)
     except:
         product_id = None
 
