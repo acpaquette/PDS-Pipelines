@@ -28,7 +28,7 @@ from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, D
 from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base, archive_base, recipe_base
 
 
-def getPDSid(infile):
+def getPDSid(input_pvl):
     """
     Use ISIS to get the PDS Product ID of a cube.
 
@@ -38,8 +38,8 @@ def getPDSid(infile):
 
     Parameters
     ----------
-    infile : str
-        A string file path from which the Product ID will be extracted.
+    input_pvl : str
+                A string file path from which the Product ID will be extracted.
 
 
     Returns
@@ -47,15 +47,17 @@ def getPDSid(infile):
     prod_id : str
         The PDS Product ID.
     """
-    upc_keywords = UPCkeywords(infile)
+    upc_keywords = UPCkeywords(input_pvl)
     for key in ['productid', 'product_id', 'imageid', 'image_id']:
         prod_id = upc_keywords.getKeyword(key)
         if prod_id:
             break
+
     # in later versions of ISIS, key values are returned as bytes
-    if isinstance(prod_id, bytes):
-        prod_id = prod_id.decode()
-    prod_id = prod_id.replace('\n', '')
+    if prod_id != None:
+        if isinstance(prod_id, bytes):
+            prod_id = prod_id.decode()
+        prod_id = prod_id.replace('\n', '')
     return prod_id
 
 def getISISid(infile):
@@ -272,10 +274,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
     datafile_attributes['isisid'] = isis_id
 
     # Attemp to get the product id from the original label
-    try:
-        product_id = getPDSid(label)
-    except:
-        product_id = None
+    product_id = getPDSid(label)
 
     datafile_attributes['productid'] = product_id
     datafile_attributes['instrumentid'] = get_instrument_id(label, session_maker)
@@ -347,10 +346,7 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, search_t
 
     search_term_attributes['upcid'] = upc_id
 
-    try:
-        product_id = getPDSid(label)
-    except:
-        product_id = None
+    product_id = getPDSid(label)
 
     search_term_attributes['pdsproductid'] = product_id
 
