@@ -12,9 +12,9 @@ def parse_args():
     parser.add_argument('--pdsid', '-r', dest='pdsid', help="PDS id to delete from " +
                         "the selected databases", type=str)
     parser.add_argument('-di', dest="di", help="Flag defining if the record should " +
-                        "be deleted from the di database", action='store_true')
+                        "be deleted from the DI database", action='store_true')
     parser.add_argument('-upc', dest="upc", help="Flag defining if the record should " +
-                        "be deleted from the upc database", action='store_true')
+                        "be deleted from the UPC database", action='store_true')
     parser.set_defaults(di=False)
     parser.set_defaults(upc=False)
     args = parser.parse_args()
@@ -37,6 +37,7 @@ def main(user_args):
             print(f'You will be deleteing {num_pds_queries} from the di ' +
                   f"database {credentials[pds_db]['db']}")
             user_answer = input('Are you sure?[Y/N]:')
+            user_answer = user_answer.upper()
 
             if user_answer == 'Y' or user_answer == 'N':
                 break
@@ -61,6 +62,7 @@ def main(user_args):
             print(f'You will be deleteing {num_upc_queries} from the upc ' +
                   f"database {credentials[upc_db]['db']}")
             user_answer = input('Are you sure?[Y/N]:')
+            user_answer = user_answer.upper()
 
             if user_answer =='Y' or user_answer == 'N':
                 break
