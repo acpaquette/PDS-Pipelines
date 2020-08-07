@@ -41,20 +41,20 @@
     },
     "pow": {
         "recipe": {
-            "mdis2isis": {
+            "isis.mdis2isis": {
                 "from_": "{{inputfile}}",
                 "to": "{{no_extension_inputfile}}.cub"
             },
-            "spiceinit": {
+            "isis.spiceinit": {
                 "from_": "{{no_extension_inputfile}}.cub",
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
-            "mdiscal": {
+            "isis.mdiscal": {
                 "from_": "{{no_extension_inputfile}}.cub",
                 "to": "{{no_extension_inputfile}}.cal.cub"
             },
-            "cam2map": {
+            "isis.cam2map": {
                 "from": "{{no_extension_inputfile}}.cal.cub",
                 "to": "{{no_extension_inputfile}}.proj.cub",
                 "map": "value",
