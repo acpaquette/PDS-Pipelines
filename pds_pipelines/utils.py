@@ -4,6 +4,7 @@ import json
 import pds_pipelines
 import datetime
 import pytz
+import pds_pipelines
 from pds_pipelines.available_modules import *
 from pds_pipelines.models import pds_models
 from pysis.exceptions import ProcessError
@@ -155,7 +156,7 @@ def generate_log_json(processes, basename, failing_command = '', error = ''):
         if process in dir(isis):
             process_log['helplink'] = isis_help_link.format(process)
 
-        if process == 'gdal_translate':
+        if process in dir(pds_pipelines.available_modules):
             process_log['helplink'] = f'www.gdal.org/{process}.html'
 
         if process == failing_command:
