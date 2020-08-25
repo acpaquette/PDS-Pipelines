@@ -49,6 +49,7 @@ def generate_processes(inputfile, recipe_string, logger, **kwargs):
 def process(processes, workarea_pwd, logger):
     # iterate through functions from the processes dictionary
     failing_command = ''
+    error = ''
     for process, keywargs in processes.items():
         try:
             module, command = process.split('.')
@@ -70,9 +71,10 @@ def process(processes, workarea_pwd, logger):
             logger.debug("%s", e)
             logger.debug("%s", e.stderr)
             failing_command = command
+            error = e.stderr.decode('utf-8')
             break
 
-    return failing_command
+    return failing_command, error
 
 
 def get_isis_id(infile):
@@ -139,3 +141,28 @@ def add_process_db(session, fid, outvalue):
         return 'SUCCESS'
     except:
         return 'ERROR'
+
+def generate_log_json(processes, basename, failing_command = '', error = ''):
+    isis_help_link = 'https://isis.astrogeology.usgs.gov/Application/presentation/Tabbed/{0}/{0}.html'
+
+    log_json = {basename: {}}
+    for process in processes:
+        process_log = {}
+        process_log['status'] = 'SUCCESS'
+        process_log['parameters'] = str(processes[process])
+        process = process.split('.')[-1]
+        
+        if process in dir(isis):
+            process_log['helplink'] = isis_help_link.format(process)
+
+        if process == 'gdal_translate':
+            process_log['helplink'] = f'www.gdal.org/{process}.html'
+
+        if process == failing_command:
+            process_log['status'] = 'ERROR'
+            process_log['error'] = error
+            log_json[basename][process] = process_log
+            break
+        else:
+            log_json[basename][process] = process_log
+    return json.dumps(log_json)
