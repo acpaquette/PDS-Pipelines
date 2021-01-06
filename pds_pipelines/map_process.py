@@ -128,7 +128,7 @@ def main(user_args):
                     finalfile_aux = os.path.join(work_dir, RHash.getMAPname() + '.' + fileext + '.aux.xml')
                     shutil.move(last_output_aux, finalfile_aux)
                     final_file_list.append(finalfile_aux)
-                                    
+
             shutil.move(last_output, finalfile)
             final_file_list.append(finalfile)
 
@@ -151,8 +151,12 @@ def main(user_args):
                 logger.error(f'JSON NOT Added to Loggy Queue with error: {e}')
 
             RQ_work.QueueRemove(jobFile)
+
         elif status == 'error':
             RHash.Status('ERROR')
+            error_string = f'Error Executing {failing_command}' \
+                           f'Standard Error: {error}'
+            RHerror.addError(basename, error_string)
             if os.path.isfile(infile):
                 os.remove(infile)
 
