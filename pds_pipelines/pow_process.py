@@ -127,7 +127,7 @@ def main(user_args):
 
         elif status == 'error':
             RHash.Status('ERROR')
-            logger.error(f'Process {k} :: Error')
+            logger.error(f'Process {failing_command} :: Error')
             logger.error(error)
             error_string = f'Error Executing {failing_command}' \
                            f'Standard Error: {error}'
