@@ -6,6 +6,7 @@ branches:
     - master
     - testing
     - qtesting
+    - import_no_db
 
 matrix:
   include:
