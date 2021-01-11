@@ -26,7 +26,7 @@ addons:
     packages:
     - postgresql-9.6-postgis-2.4
 
-before_install:
+before_script:
   # Create the template database that is used to instantiate the test DB
   - psql -c 'create database template_postgis;' -U postgres
   - psql template_postgis -U postgres -c "create extension postgis"
