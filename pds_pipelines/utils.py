@@ -69,8 +69,8 @@ def process(processes, workarea_pwd, logger):
                 func(**keywargs)
 
         except ProcessError as e:
-            logger.info("%s", e)
-            logger.info("%s", e.stderr)
+            logger.debug("%s", e)
+            logger.debug("%s", e.stderr)
             failing_command = command
             error = e.stderr.decode('utf-8')
             break
@@ -78,7 +78,7 @@ def process(processes, workarea_pwd, logger):
         except RuntimeError as e:
             failing_command = command
             error = e
-            logger.info("%s", error)
+            logger.debug("%s", error)
 
     return failing_command, error
 
