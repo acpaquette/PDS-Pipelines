@@ -31,9 +31,8 @@ def spiceinit(from_):
     raise ProcessError(1, ['spiceinit'], b'Could not spiceinit', b'Could not spiceinit')
 pysis.isis.spiceinit = spiceinit
 
-import pds_pipelines
+import pds_pipelines.models.upc_models as models
 from pds_pipelines.process import Process
-from pds_pipelines import upc_process
 from pds_pipelines import utils
 from pds_pipelines.upc_process import get_target_name, get_instrument_name, \
                                       get_spacecraft_name, create_datafiles_atts, \
@@ -68,7 +67,7 @@ cam_info_dict = {'upcid': 1,
                  'instrumentid': 1,
                  'pdsproductid': 'PRODUCTID',
                  'err_flag': False,
-                 'isisfootprint': Polygon([(153.80256122853893, -32.68515128444211),
+                 'GisFootprint': Polygon([(153.80256122853893, -32.68515128444211),
                                            (153.80256122853893, -33.18515128444211),
                                            (153.30256122853893, -33.18515128444211),
                                            (153.30256122853893, -32.68515128444211),
@@ -150,24 +149,28 @@ def test_datafiles_no_pdsid(mocked_isis_id, pds_label):
     assert datafile_attributes['productid'] == None
 
 def extract_keyword(key):
-    if key == 'GisFootprint':
-        return Polygon([(153.80256122853893, -32.68515128444211), (153.80256122853893, -33.18515128444211), (153.30256122853893, -33.18515128444211), (153.30256122853893, -32.68515128444211), (153.80256122853893, -32.68515128444211)]).wkt
     return cam_info_dict[key]
+    
 @patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
 @patch('pds_pipelines.upc_keywords.UPCkeywords.getKeyword', side_effect = extract_keyword)
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
 def test_search_terms_generation(mocked_product_id, mocked_keyword, mocked_init, pds_label):
     upc_id = cam_info_dict['upcid']
 
-    search_term_attributes = create_search_terms_atts(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '')
+    search_term_attributes = dict.fromkeys(models.SearchTerms.__table__.columns.keys(), None)
+    search_term_attributes['err_flag'] = True
+
+    search_term_mapping = dict(zip(search_term_attributes.keys(), search_term_attributes.keys()))
+    search_term_mapping['isisfootprint'] = 'GisFootprint'
+
+    search_term_attributes = create_search_terms_atts(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '', search_term_mapping)
     # Convert the dates from strings back to date times. This could probably
     # be handled in the model
     search_term_attributes['processdate'] = datetime.datetime.strptime(search_term_attributes['processdate'], "%Y-%m-%d %H:%M:%S")
     search_term_attributes['starttime'] = datetime.datetime.strptime(search_term_attributes['starttime'], "%Y-%m-%d %H")
 
-    for key in cam_info_dict.keys():
+    for key in search_term_mapping.keys():
         attribute = search_term_attributes[key]
-        print(type(attribute))
         if isinstance(attribute, datetime.date):
             attribute = attribute.strftime("%Y-%m-%d %H")
         if isinstance(attribute, WKBElement):
@@ -175,7 +178,7 @@ def test_search_terms_generation(mocked_product_id, mocked_keyword, mocked_init,
         if isinstance(attribute, float):
             np.testing.assert_almost_equal(attribute, cam_info_dict[key], 12)
             continue
-        assert cam_info_dict[key] == attribute
+        assert cam_info_dict[search_term_mapping[key]] == attribute
 
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
 def test_search_terms_keyword_exception(mocked_product_id, pds_label):
