@@ -72,18 +72,17 @@ def getPDSid(infile):
 
 def get_target_name(label):
     """
-    Fetches the target_id from the database. If a target_id is not found try
-    to extract it from a given PDS label and add the target to the database
+    Try to extract the target_name from a given PDS label.
 
     Parameters
     ----------
-    pds_label : Object
+    label : Object
         Any type of pds object that can be indexed
 
     Returns
     -------
     target_name : str
-        The defined target_id from the database. If this is 0 a target name
+        The defined target_name from the label. If this is None a target name
         could not be pulled from the label
     """
     try:
@@ -105,8 +104,8 @@ def get_instrument_name(label):
     Returns
     -------
     instrument_name : str
-        The defined instrument_id from the database. If this is 0 a instrument
-        name could not be pulled from the label
+        The defined instrument_name from the label. If this is None an instrument name
+        could not be pulled from the label
     """
     # Although PDS3 the INSTRUMENT_NAME keyword, it is missing from some older datasets.
     #  PDS3 defines several (often interchangeable) keywords to
@@ -133,6 +132,8 @@ def get_spacecraft_name(label):
     Returns
     -------
     spacecraft_name : str
+        The defined spacecraft_name from the label. If this is None an spacecraft name
+        could not be pulled from the label
     """
     # PDS3 does not require a keyword to hold spacecraft name,
     #  and PDS3 defines several (often interchangeable) keywords to
@@ -146,9 +147,6 @@ def get_spacecraft_name(label):
         except KeyError:
             spacecraft_name = None
 
-    if not spacecraft_name:
-        return None
-
     return spacecraft_name
 
 def read_json_footprint(footprint_file):
@@ -161,8 +159,8 @@ def read_json_footprint(footprint_file):
 
 def create_datafiles_atts(label, edr_source, input_cube):
     """
-    Creates a new DataFiles record through values from a given label and adds
-    the new record to the database
+    Creates a DataFiles record attribute dictionary through values from a given
+    label
 
     Parameters
     ----------
@@ -175,14 +173,10 @@ def create_datafiles_atts(label, edr_source, input_cube):
     input_cube : str
         Path to the cube generated from the data source
 
-    session_maker : sessionmaker
-        sqlalchemy sessionmaker object for connection to and querying the
-        database
-
     Returns
     -------
-    upc_id : int
-        The defined upc_id from the database
+    datafile_attributes : dict
+        A dict of attributes for a Datafiles record (UPC database table record)
     """
     try:
         # If there exists an array of values, then the first value is the
@@ -209,10 +203,10 @@ def create_datafiles_atts(label, edr_source, input_cube):
 
     return datafile_attributes
 
-def create_search_terms_atts(label, cam_info_pvl, upc_id, input_cube, footprint_file, search_term_mapping={}):
+def create_search_terms_atts(cam_info_pvl, upc_id, input_cube, footprint_file = '', search_term_mapping={}):
     """
-    Creates a new SearchTerms record through values from a given caminfo file
-    and adds the new record to the database
+    Creates a SearchTerms record attribute dictionary through values from a given
+    caminfo file
 
     Parameters
     ----------
@@ -225,10 +219,16 @@ def create_search_terms_atts(label, cam_info_pvl, upc_id, input_cube, footprint_
     input_cube : str
         Path to the cube generated from the data source
 
-    session_maker : sessionmaker
-        sqlalchemy sessionmaker object for connection to and querying the
-        database
+    footprint_file : str
+        Path to the file containing the image footprint polygon
 
+    search_term_mapping : dict
+        Dict of keys mapping search term record attributes to values on the expected label
+
+    Returns
+    -------
+    search_term_attributes : dict
+        A dict of attributes for a SearchTerms record (UPC database table record)
     """
     search_term_attributes = dict.fromkeys(SearchTerms.__table__.columns.keys(), None)
     search_term_attributes['err_flag'] = True
@@ -297,10 +297,13 @@ def create_json_keywords_atts(cam_info_pvl, upc_id, input_file, failing_command,
     failing_command : str
         String presentation of the failing processing command
 
-    session_maker : sessionmaker
-        sqlalchemy sessionmaker object for connection to and querying the
-        database
+    logger : Object
+        Python logger object from the logging library
 
+    Returns
+    -------
+    json_keywords_attributes : dict
+        A dict of attributes for a JsonKeywords record (UPC database table record)
     """
     try:
         keywordsOBJ = UPCkeywords(cam_info_pvl)
@@ -443,7 +446,7 @@ def main(user_args):
         session.close()
 
         ######## Generate DataFiles Record ########
-        datafile_attributes = create_datafiles_atts(pds_label, edr_source, no_extension_inputfile + '.cub', upc_session_maker)
+        datafile_attributes = create_datafiles_atts(pds_label, edr_source, no_extension_inputfile + '.cub')
 
         datafile_attributes['instrumentid'] = instrument_id
         datafile_attributes['targetid'] = target_id
@@ -454,7 +457,7 @@ def main(user_args):
         session.close()
 
         ######## Generate SearchTerms Record ########
-        search_term_attributes = create_search_terms_atts(pds_label, cam_info_file, upc_id, no_extension_inputfile + '.cub', footprint_file, search_term_mapping, upc_session_maker)
+        search_term_attributes = create_search_terms_atts(cam_info_file, upc_id, no_extension_inputfile + '.cub', footprint_file, search_term_mapping)
 
         search_term_attributes['targetid'] = target_id
         search_term_attributes['instrumentid'] = instrument_id
@@ -464,7 +467,7 @@ def main(user_args):
         session.close()
 
         ######## Generate JsonKeywords Record ########
-        json_keywords_attributes = create_json_keywords_atts(cam_info_file, upc_id, inputfile, failing_command, upc_session_maker, logger)
+        json_keywords_attributes = create_json_keywords_atts(cam_info_file, upc_id, inputfile, failing_command, logger)
 
         session = upc_session_maker()
         JsonKeywords.create(session, json_keywords_attributes)
