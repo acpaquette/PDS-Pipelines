@@ -150,24 +150,21 @@ def test_datafiles_no_pdsid(mocked_isis_id, pds_label):
 
 def extract_keyword(key):
     return cam_info_dict[key]
-    
+
 @patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
 @patch('pds_pipelines.upc_keywords.UPCkeywords.getKeyword', side_effect = extract_keyword)
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
 def test_search_terms_generation(mocked_product_id, mocked_keyword, mocked_init, pds_label):
     upc_id = cam_info_dict['upcid']
 
-    search_term_attributes = dict.fromkeys(models.SearchTerms.__table__.columns.keys(), None)
-    search_term_attributes['err_flag'] = True
-
-    search_term_mapping = dict(zip(search_term_attributes.keys(), search_term_attributes.keys()))
-    search_term_mapping['isisfootprint'] = 'GisFootprint'
-
-    search_term_attributes = create_search_terms_atts(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '', search_term_mapping)
+    search_term_attributes = create_search_terms_atts(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '')
     # Convert the dates from strings back to date times. This could probably
     # be handled in the model
     search_term_attributes['processdate'] = datetime.datetime.strptime(search_term_attributes['processdate'], "%Y-%m-%d %H:%M:%S")
     search_term_attributes['starttime'] = datetime.datetime.strptime(search_term_attributes['starttime'], "%Y-%m-%d %H")
+
+    search_term_mapping = dict(zip(search_term_attributes.keys(), search_term_attributes.keys()))
+    search_term_mapping['isisfootprint'] = 'GisFootprint'
 
     for key in search_term_mapping.keys():
         attribute = search_term_attributes[key]

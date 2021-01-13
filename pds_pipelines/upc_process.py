@@ -235,6 +235,7 @@ def create_search_terms_atts(label, cam_info_pvl, upc_id, input_cube, footprint_
 
     if not search_term_mapping:
         search_term_mapping = dict(zip(search_term_attributes.keys(), search_term_attributes.keys()))
+        search_term_mapping['isisfootprint'] = 'GisFootprint'
 
     try:
         keywordsOBJ = UPCkeywords(cam_info_pvl)
@@ -248,8 +249,6 @@ def create_search_terms_atts(label, cam_info_pvl, upc_id, input_cube, footprint_
                 search_term_attributes[key] = keywordsOBJ.getKeyword(search_term_mapping[key])
             except KeyError:
                 search_term_attributes[key] = None
-
-        search_term_attributes['isisfootprint'] = keywordsOBJ.getKeyword('GisFootprint')
 
         if os.path.exists(footprint_file):
             search_term_attributes['isisfootprint'] = read_json_footprint(footprint_file)
