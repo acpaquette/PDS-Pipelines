@@ -73,8 +73,10 @@ class DataFiles(BaseMixin, Base):
             datafile_qobj = DataFiles(**kw)
             session.add(datafile_qobj)
         else:
-            datafile_attributes.pop('upcid')
-            datafile_qobj.update(**kw)
+            upc_id = kw.pop('upcid')
+            session.query(DataFiles).\
+                filter(DataFiles.upcid == upc_id).\
+                update(kw)
         session.commit()
 
         return datafile_qobj
@@ -129,7 +131,6 @@ class Targets(BaseMixin, Base):
         #  access the new instance.
         if target_qobj is None:
             target_qobj = Targets(**kw)
-            print(target_qobj.targetid)
             session.add(target_qobj)
             session.commit()
         return target_qobj
@@ -183,8 +184,10 @@ class SearchTerms(BaseMixin, Base):
             search_terms_qobj = SearchTerms(**kw)
             session.add(search_terms_qobj)
         else:
-            kw.pop('upcid')
-            search_terms_qobj.update(**kw)
+            upc_id = kw.pop('upcid')
+            session.query(SearchTerms).\
+                filter(SearchTerms.upcid == upc_id).\
+                update(kw)
         session.commit()
 
         return search_terms_qobj
@@ -203,8 +206,10 @@ class JsonKeywords(BaseMixin, Base):
             json_keywords_qobj = JsonKeywords(**kw)
             session.add(json_keywords_qobj)
         else:
-            kw.pop('upcid')
-            json_keywords_qobj.update(**kw)
+            upc_id = kw.pop('upcid')
+            session.query(JsonKeywords).\
+                filter(JsonKeywords.upcid == upc_id).\
+                update(kw)
         session.commit()
 
         return json_keywords_qobj

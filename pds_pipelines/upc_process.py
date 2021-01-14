@@ -463,14 +463,14 @@ def main(user_args):
         search_term_attributes['instrumentid'] = instrument_id
 
         session = upc_session_maker()
-        SearchTerms.create(session, search_term_attributes)
+        SearchTerms.create(session, **search_term_attributes)
         session.close()
 
         ######## Generate JsonKeywords Record ########
         json_keywords_attributes = create_json_keywords_atts(cam_info_file, upc_id, inputfile, failing_command, logger)
 
         session = upc_session_maker()
-        JsonKeywords.create(session, json_keywords_attributes)
+        JsonKeywords.create(session, **json_keywords_attributes)
         session.close()
 
         try:
