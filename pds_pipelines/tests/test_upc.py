@@ -157,7 +157,7 @@ def extract_keyword(key):
 def test_search_terms_generation(mocked_product_id, mocked_keyword, mocked_init, pds_label):
     upc_id = cam_info_dict['upcid']
 
-    search_term_attributes = create_search_terms_atts(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '')
+    search_term_attributes = create_search_terms_atts('/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '')
     # Convert the dates from strings back to date times. This could probably
     # be handled in the model
     search_term_attributes['processdate'] = datetime.datetime.strptime(search_term_attributes['processdate'], "%Y-%m-%d %H:%M:%S")
@@ -181,7 +181,7 @@ def test_search_terms_generation(mocked_product_id, mocked_keyword, mocked_init,
 def test_search_terms_keyword_exception(mocked_product_id, pds_label):
     upc_id = cam_info_dict['upcid']
 
-    search_term_attributes = create_search_terms_atts(pds_label, "", upc_id, '/Path/to/my/cube.cub', '')
+    search_term_attributes = create_search_terms_atts("", upc_id, '/Path/to/my/cube.cub', '')
     assert search_term_attributes['starttime'] == None
     assert search_term_attributes['solarlongitude'] == None
     assert search_term_attributes['meangroundresolution'] == None
