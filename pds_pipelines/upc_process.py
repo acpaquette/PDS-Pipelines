@@ -425,66 +425,67 @@ def main(user_args):
                                        footprint_file=footprint_file)
         failing_command, _ = process(processes, workarea, logger)
 
-        pds_label = pvl.load(inputfile)
+        if upc_session_maker and pds_session_maker:
+            pds_label = pvl.load(inputfile)
 
-        target_name = get_target_name(pds_label)
+            target_name = get_target_name(pds_label)
 
-        session = upc_session_maker()
-        target_qobj = Targets.create(session, targetname=target_name,
-                                              displayname=target_name.title(),
-                                              system=target_name)
-        target_id = target_qobj.targetid
-        session.close()
+            session = upc_session_maker()
+            target_qobj = Targets.create(session, targetname=target_name,
+                                                  displayname=target_name.title(),
+                                                  system=target_name)
+            target_id = target_qobj.targetid
+            session.close()
 
-        instrument_name = get_instrument_name(pds_label)
-        spacecraft_name = get_spacecraft_name(pds_label)
+            instrument_name = get_instrument_name(pds_label)
+            spacecraft_name = get_spacecraft_name(pds_label)
 
-        session = upc_session_maker()
-        instrument_qobj = Instruments.create(session, instrument=instrument_name,
-                                                      spacecraft=spacecraft_name)
-        instrument_id = instrument_qobj.instrumentid
-        session.close()
+            session = upc_session_maker()
+            instrument_qobj = Instruments.create(session, instrument=instrument_name,
+                                                          spacecraft=spacecraft_name)
+            instrument_id = instrument_qobj.instrumentid
+            session.close()
 
-        ######## Generate DataFiles Record ########
-        datafile_attributes = create_datafiles_atts(pds_label, edr_source, no_extension_inputfile + '.cub')
+            ######## Generate DataFiles Record ########
+            datafile_attributes = create_datafiles_atts(pds_label, edr_source, no_extension_inputfile + '.cub')
 
-        datafile_attributes['instrumentid'] = instrument_id
-        datafile_attributes['targetid'] = target_id
+            datafile_attributes['instrumentid'] = instrument_id
+            datafile_attributes['targetid'] = target_id
 
-        session = upc_session_maker()
-        datafile_qobj = DataFiles.create(session, **datafile_attributes)
-        upc_id = datafile_qobj.upcid
-        session.close()
+            session = upc_session_maker()
+            datafile_qobj = DataFiles.create(session, **datafile_attributes)
+            upc_id = datafile_qobj.upcid
+            session.close()
 
-        ######## Generate SearchTerms Record ########
-        search_term_attributes = create_search_terms_atts(cam_info_file, upc_id, no_extension_inputfile + '.cub', footprint_file, search_term_mapping)
+            ######## Generate SearchTerms Record ########
+            search_term_attributes = create_search_terms_atts(cam_info_file, upc_id, no_extension_inputfile + '.cub', footprint_file, search_term_mapping)
 
-        search_term_attributes['targetid'] = target_id
-        search_term_attributes['instrumentid'] = instrument_id
+            search_term_attributes['targetid'] = target_id
+            search_term_attributes['instrumentid'] = instrument_id
 
-        session = upc_session_maker()
-        SearchTerms.create(session, **search_term_attributes)
-        session.close()
+            session = upc_session_maker()
+            SearchTerms.create(session, **search_term_attributes)
+            session.close()
 
-        ######## Generate JsonKeywords Record ########
-        json_keywords_attributes = create_json_keywords_atts(cam_info_file, upc_id, inputfile, failing_command, logger)
+            ######## Generate JsonKeywords Record ########
+            json_keywords_attributes = create_json_keywords_atts(cam_info_file, upc_id, inputfile, failing_command, logger)
 
-        session = upc_session_maker()
-        JsonKeywords.create(session, **json_keywords_attributes)
-        session.close()
+            session = upc_session_maker()
+            JsonKeywords.create(session, **json_keywords_attributes)
+            session.close()
 
-        try:
-            pds_session = pds_session_maker()
-            pds_session.flush()
-        except:
-            logger.debug("Unable to flush database connection")
+            try:
+                pds_session = pds_session_maker()
+                pds_session.flush()
+            except:
+                logger.debug("Unable to flush database connection")
 
-        add_process_db(pds_session, fid, True)
-        pds_session.close()
+            add_process_db(pds_session, fid, True)
+            pds_session.close()
 
-        # Disconnect from the engines
-        pds_engine.dispose()
-        upc_engine.dispose()
+            # Disconnect from the engines
+            pds_engine.dispose()
+            upc_engine.dispose()
 
         if not persist:
             # Remove all files file from the workarea except for the copied
