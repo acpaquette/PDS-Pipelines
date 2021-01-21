@@ -29,7 +29,7 @@ Group = Banana
     FRUIT = APPLE
 End_Group
         '''
-        temp_pvl_file = os.path.join('/Users/acpaquette/Desktop', 'tempPvl.pvl')
+        temp_pvl_file = os.path.join(tempdir, 'tempPvl.pvl')
         with open(temp_pvl_file, 'w') as fp:
             fp.write(pvl_str)
 
