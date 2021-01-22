@@ -20,7 +20,7 @@ def test_lower_keys():
     output = lower_keys([{"FRUIT": "APPLE",}, {"FRUIT": "BANANA",}])
     for i in output:
         for key in i:
-            assert key == "FRUIT".lower()
+            assert key == "fruit"
 
 def test_load_pvl():
     with tempfile.TemporaryDirectory() as tempdir:
